@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PullUp Pro">
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiUHVsbFVwIFBybyIsInNob3J0X25hbWUiOiJQdWxsVXAiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2ZmZmZmZiIsInRoZW1lX2NvbG9yIjoiIzY2N2VlYSIsImlvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbCw8c3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDEwMCAxMDAnPjxyZWN0IHdpZHRoPScxMDAnIGhlaWdodD0nMTAwJyBmaWxsPScjNjY3ZWVhJy8+PHRleHQgeD0nNTAnIHk9JzYwJyBmb250LXNpemU9JzUwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJz7wn4qqPC90ZXh0Pjwvc3ZnPiIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23667eea'/><text x='50' y='60' font-size='50' text-anchor='middle'>💪</text></svg>">
+    <title>PullUp Pro - Персональний тренер</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 10px;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            padding-top: 20px;
+        }
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+        .nav {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 20px;
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+        }
+        .nav-btn {
+            padding: 12px 8px;
+            border: none;
+            background: #f5f7fa;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .nav-btn:active {
+            transform: scale(0.95);
+        }
+        .nav-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .week-selector {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .week-selector button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            min-width: 45px;
+        }
+        .week-selector button:active {
+            background: rgba(255,255,255,0.4);
+        }
+        .week-selector button:disabled {
+            opacity: 0.3;
+        }
+        .days-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        @media (min-width: 640px) {
+            .days-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .day-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .day-card:active {
+            transform: scale(0.98);
+        }
+        .day-card.completed {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border: 3px solid #4ade80;
+        }
+        .day-card .emoji {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .day-card h3 {
+            font-size: 1.3em;
+            margin-bottom: 5px;
+        }
+        .day-card .exercises {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #666;
+        }
+        .workout-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .workout-modal.active {
+            display: block;
+        }
+        .workout-content {
+            background: white;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            margin-top: 50px;
+            min-height: calc(100vh - 50px);
+        }
+        .exercise-block {
+            background: #f5f7fa;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+        .set-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .set-input input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        .btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: white;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .stat-card .emoji {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-card .label {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+        .nutrition-card {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+        .nutrition-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .nutrition-item {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        input[type="number"], input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .setup-wizard {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .progress-bar {
+            background: #ddd;
+            height: 8px;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .install-prompt {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .close-modal {
+            position: sticky;
+            top: 0;
+            background: white;
+            padding: 15px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💪 PullUp Pro</h1>
+            <p>Твій персональний тренер підтягувань</p>
+        </div>
+
+        <!-- Setup Screen -->
+        <div id="setupScreen" class="card setup-wizard">
+            <h2 style="text-align: center; margin-bottom: 20px;">🎯 Налаштування програми</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar" style="width: 25%;"></div>
+            </div>
+            
+            <div id="step1">
+                <h3 style="margin: 20px 0;">Твій поточний максимум</h3>
+                <input type="number" id="userMax" placeholder="Наприклад: 24" value="24">
+            </div>
+            
+            <div id="step2" class="hidden">
+                <h3 style="margin: 20px 0;">Твоя мета</h3>
+                <input type="number" id="targetMax" placeholder="Наприклад: 50" value="50">
+            </div>
+            
+            <div id="step3" class="hidden">
+                <h3 style="margin: 20px 0;">Тривалість програми (тижнів)</h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                    <button class="btn btn-primary" onclick="selectWeeks(6)">6 тижнів</button>
+                    <button class="btn btn-primary" onclick="selectWeeks(8)">8 тижнів</button>
+                    <button class="btn btn-primary" onclick="selectWeeks(10)">10 тижнів</button>
+                    <button class="btn btn-primary" onclick="selectWeeks(12)">12 тижнів</button>
+                </div>
+            </div>
+            
+            <div id="step4" class="hidden">
+                <h3 style="margin: 20px 0;">Твоя вага (кг)</h3>
+                <input type="number" id="bodyWeight" placeholder="75" value="75">
+                <h3 style="margin: 20px 0;">Дата початку</h3>
+                <input type="date" id="startDate">
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 30px;">
+                <button class="btn btn-primary" id="backBtn" onclick="prevStep()" style="display: none;">Назад</button>
+                <button class="btn btn-success" id="nextBtn" onclick="nextStep()" style="flex: 1;">Далі</button>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="mainApp" class="hidden">
+            <!-- Navigation -->
+            <div class="nav">
+                <button class="nav-btn active" onclick="showView('calendar')">📅 Календар</button>
+                <button class="nav-btn" onclick="showView('stats')">📊 Статистика</button>
+                <button class="nav-btn" onclick="showView('nutrition')">🍗 Харчування</button>
+                <button class="nav-btn" onclick="resetApp()">⚙️ Скинути</button>
+            </div>
+
+            <!-- Calendar View -->
+            <div id="calendarView">
+                <div class="week-selector">
+                    <button onclick="changeWeek(-1)" id="prevWeek">◀</button>
+                    <div style="text-align: center;">
+                        <h2 id="weekTitle">Тиждень 1</h2>
+                        <p id="weekPhase">Адаптація 🌱</p>
+                    </div>
+                    <button onclick="changeWeek(1)" id="nextWeek">▶</button>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: 20px;">📊 Прогрес до мети</h3>
+                    <div class="progress-bar" style="height: 30px;">
+                        <div class="progress-fill" id="goalProgress" style="width: 0%;"></div>
+                    </div>
+                    <p id="progressText" style="text-align: center; margin-top: 10px;"></p>
+                </div>
+
+                <div class="days-grid" id="daysGrid"></div>
+            </div>
+
+            <!-- Stats View -->
+            <div id="statsView" class="hidden">
+                <div class="card">
+                    <h2 style="margin-bottom: 30px;">📊 Твоя статистика</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="emoji">💪</div>
+                            <div class="value" id="totalPullups">0</div>
+                            <div class="label">Всього підтягувань</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="emoji">✅</div>
+                            <div class="value" id="completedWorkouts">0</div>
+                            <div class="label">Тренувань</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="emoji">🔥</div>
+                            <div class="value" id="currentStreak">0</div>
+                            <div class="label">Серія</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="emoji">🏆</div>
+                            <div class="value" id="maxResult">0</div>
+                            <div class="label">Максимум</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nutrition View -->
+            <div id="nutritionView" class="hidden">
+                <div class="nutrition-card">
+                    <h2 style="margin-bottom: 20px;">🍗 Твоє харчування</h2>
+                    <div class="nutrition-grid">
+                        <div class="nutrition-item">
+                            <h3 id="dailyProtein">135г</h3>
+                            <p>Білка на день</p>
+                        </div>
+                        <div class="nutrition-item">
+                            <h3 id="dailyCalories">2625</h3>
+                            <p>Калорій на день</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: 20px;">🥚 Джерела білка</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div style="padding: 15px; background: #f5f7fa; border-radius: 10px;">
+                            <strong>Куряча грудка</strong><br>
+                            <span style="color: #666;">31г в 100г</span>
+                        </div>
+                        <div style="padding: 15px; background: #f5f7fa; border-radius: 10px;">
+                            <strong>Яйця</strong><br>
+                            <span style="color: #666;">13г в 2 шт</span>
+                        </div>
+                        <div style="padding: 15px; background: #f5f7fa; border-radius: 10px;">
+                            <strong>Грецький йогурт</strong><br>
+                            <span style="color: #666;">10г в 100г</span>
+                        </div>
+                        <div style="padding: 15px; background: #f5f7fa; border-radius: 10px;">
+                            <strong>Тунець</strong><br>
+                            <span style="color: #666;">30г в 100г</span>
+                        </div>
+                        <div style="padding: 15px; background: #f5f7fa; border-radius: 10px;">
+                            <strong>Протеїн</strong><br>
+                            <span style="color: #666;">25г в 1 скуп</span>
+                        </div>
+                        <div style="padding: 15px; background: #f5f7fa; border-radius: 10px;">
+                            <strong>Сочевиця</strong><br>
+                            <span style="color: #666;">9г в 100г</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 20px;">💡 Поради</h3>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="padding: 15px; background: #d1fae5; border-radius: 10px;">
+                            ✓ Їж білок протягом 30 хвилин після тренування
+                        </div>
+                        <div style="padding: 15px; background: #d1fae5; border-radius: 10px;">
+                            ✓ Пий мінімум 2-3 літри води на день
+                        </div>
+                        <div style="padding: 15px; background: #d1fae5; border-radius: 10px;">
+                            ✓ Розподіли білок рівномірно між прийомами їжі
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workout Modal -->
+        <div id="workoutModal" class="workout-modal">
+            <div class="workout-content">
+                <h2 id="workoutTitle" style="margin-bottom: 20px;"></h2>
+                <div id="exercisesList"></div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="closeWorkout()">Закрити</button>
+                    <button class="btn btn-success" onclick="completeWorkout()" style="flex: 1;">✅ Завершити</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let currentWeek = 1;
+        let currentView = 'calendar';
+        let programData = {
+            userMax: 24,
+            targetMax: 50,
+            programWeeks: 8,
+            bodyWeight: 75,
+            startDate: new Date().toISOString().split('T')[0],
+            workouts: {},
+            program: {}
+        };
+        let currentWorkout = null;
+
+        // Load saved data
+        function loadData() {
+            const saved = localStorage.getItem('pullupPro');
+            if (saved) {
+                programData = JSON.parse(saved);
+                document.getElementById('setupScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                renderCalendar();
+                updateStats();
+                updateNutrition();
+            } else {
+                document.getElementById('startDate').valueAsDate = new Date();
+            }
+        }
+
+        // Save data
+        function saveData() {
+            localStorage.setItem('pullupPro', JSON.stringify(programData));
+        }
+
+        // Setup wizard
+        function nextStep() {
+            if (currentStep === 1) {
+                programData.userMax = parseInt(document.getElementById('userMax').value) || 24;
+                document.getElementById('step1').classList.add('hidden');
+                document.getElementById('step2').classList.remove('hidden');
+                document.getElementById('backBtn').style.display = 'block';
+                currentStep = 2;
+                updateProgressBar();
+            } else if (currentStep === 2) {
+                programData.targetMax = parseInt(document.getElementById('targetMax').value) || 50;
+                document.getElementById('step2').classList.add('hidden');
+                document.getElementById('step3').classList.remove('hidden');
+                currentStep = 3;
+                updateProgressBar();
+            } else if (currentStep === 4) {
+                programData.bodyWeight = parseInt(document.getElementById('bodyWeight').value) || 75;
+                programData.startDate = document.getElementById('startDate').value;
+                generateProgram();
+                document.getElementById('setupScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                renderCalendar();
+                updateStats();
+                updateNutrition();
+                saveData();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep === 2) {
+                document.getElementById('step2').classList.add('hidden');
+                document.getElementById('step1').classList.remove('hidden');
+                document.getElementById('backBtn').style.display = 'none';
+                currentStep = 1;
+            } else if (currentStep === 3) {
+                document.getElementById('step3').classList.add('hidden');
+                document.getElementById('step2').classList.remove('hidden');
+                currentStep = 2;
+            } else if (currentStep === 4) {
+                document.getElementById('step4').classList.add('hidden');
+                document.getElementById('step3').classList.remove('hidden');
+                currentStep = 3;
+            }
+            updateProgressBar();
+        }
+
+        function selectWeeks(weeks) {
+            programData.programWeeks = weeks;
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('step4').classList.remove('hidden');
+            currentStep = 4;
+            document.getElementById('nextBtn').textContent = 'Створити програму! 🚀';
+            updateProgressBar();
+        }
+
+        function updateProgressBar() {
+            const progress = (currentStep / 4) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        // Generate program
+        function generateProgram() {
+            const diff = programData.targetMax - programData.userMax;
+            const level = programData.userMax < 15 ? 'beginner' : programData.userMax < 30 ? 'intermediate' : 'advanced';
+            
+            for (let week = 1; week <= programData.programWeeks; week++) {
+                const progress = week / programData.programWeeks;
+                const volumeReps = Math.max(8, Math.round(programData.userMax * 0.5 * (1 + progress * 0.3)));
+                
+                // Розрахунок ваги залежно від рівня та фази
+                let strengthWeight = 0;
+                let brusiWeight = 0;
+                
+                if (level === 'beginner') {
+                    if (week <= 2) strengthWeight = 5;
+                    else if (week <= 4) strengthWeight = 7;
+                    else if (week <= 6) strengthWeight = 10;
+                    else if (week === programData.programWeeks - 1) strengthWeight = 0; // відпочинок
+                    else strengthWeight = 5; // пік
+                    brusiWeight = Math.round(strengthWeight * 0.6);
+                } else if (level === 'intermediate') {
+                    if (week <= 2) strengthWeight = 10;
+                    else if (week <= 4) strengthWeight = 15;
+                    else if (week <= 6) strengthWeight = 20;
+                    else if (week === programData.programWeeks - 1) strengthWeight = 0;
+                    else strengthWeight = 10;
+                    brusiWeight = Math.round(strengthWeight * 0.7);
+                } else { // advanced
+                    if (week <= 2) strengthWeight = 15;
+                    else if (week <= 4) strengthWeight = 20;
+                    else if (week <= 6) strengthWeight = 25;
+                    else if (week === programData.programWeeks - 1) strengthWeight = 0;
+                    else strengthWeight = 15;
+                    brusiWeight = Math.round(strengthWeight * 0.7);
+                }
+                
+                let phase, color;
+                if (week <= Math.ceil(programData.programWeeks * 0.25)) {
+                    phase = 'Адаптація 🌱'; color = '#10b981';
+                } else if (week <= Math.ceil(programData.programWeeks * 0.5)) {
+                    phase = 'Прогресія 📈'; color = '#3b82f6';
+                } else if (week <= Math.ceil(programData.programWeeks * 0.75)) {
+                    phase = 'Інтенсивність 🔥'; color = '#f97316';
+                } else if (week === programData.programWeeks - 1) {
+                    phase = 'Відпочинок 😌'; color = '#a855f7';
+                } else {
+                    phase = 'Пік 🏆'; color = '#ef4444';
+                }
+
+                // Тиждень відпочинку
+                if (week === programData.programWeeks - 1) {
+                    programData.program[week] = {
+                        phase, color,
+                        mon: [
+                            {name: 'Підтягування', sets: 6, reps: volumeReps, weight: 0, rest: '60-90с'},
+                            {name: 'Легкі бруси', sets: 3, reps: 10, weight: 0, rest: '60с'}
+                        ],
+                        wed: [
+                            {name: 'Підтягування', sets: 6, reps: volumeReps, weight: 0, rest: '60-90с'},
+                            {name: 'Легкі бруси', sets: 3, reps: 10, weight: 0, rest: '60с'}
+                        ],
+                        fri: [
+                            {name: 'Підтягування', sets: 6, reps: volumeReps, weight: 0, rest: '60-90с'},
+                            {name: 'Планка', sets: 3, reps: '45с', weight: 0, rest: '45с'}
+                        ],
+                        sun: null
+                    };
+                } else if (week === programData.programWeeks) {
+                    // Фінальний тиждень
+                    programData.program[week] = {
+                        phase, color,
+                        mon: [
+                            {name: 'Підтягування', sets: 4, reps: 4, weight: strengthWeight, rest: '3-4хв'}
+                        ],
+                        wed: [
+                            {name: 'Підтягування', sets: 10, reps: Math.round(volumeReps * 1.2), weight: 0, rest: '60-90с'}
+                        ],
+                        fri: [
+                            {name: '5-хв сет', sets: 1, reps: 'максимум', weight: 0, rest: 'довільно'},
+                            {name: `Лестниця 1-${Math.min(10, Math.round(programData.userMax * 0.4))}-1`, sets: 1, reps: '100', weight: 0, rest: 'довільно'}
+                        ],
+                        sun: [
+                            {name: `🎊 ФІНАЛЬНИЙ ТЕСТ`, sets: 1, reps: programData.targetMax, weight: 0, rest: '-'}
+                        ]
+                    };
+                } else {
+                    // Звичайні тижні
+                    const ladderPeak = Math.min(15, Math.round(8 + week * 0.5));
+                    const isoSeconds = 10 + Math.floor(week / 2);
+                    const negativeReps = 6 + Math.floor(week / 3);
+                    const minuteSet = 4 + Math.floor(week / 2);
+                    
+                    programData.program[week] = {
+                        phase, color,
+                        mon: [
+                            {name: 'Підтягування', sets: 5, reps: 5, weight: strengthWeight, rest: '3-4хв'},
+                            {name: 'Ізометрія (утримання вгорі)', sets: 3, reps: `${isoSeconds}с`, weight: 0, rest: '2-3хв'},
+                            {name: 'Негативні (спуск 6-8с)', sets: 4, reps: negativeReps, weight: 0, rest: '2хв'}
+                        ],
+                        wed: [
+                            {name: 'Підтягування', sets: 10, reps: volumeReps, weight: 0, rest: '60-90с'},
+                            {name: 'Добивання з гумою', sets: 2, reps: 'до відмови', weight: 0, rest: '2хв'}
+                        ],
+                        fri: [
+                            {name: `Лестниця 1-${ladderPeak}-1`, sets: 1, reps: `~${ladderPeak * ladderPeak}`, weight: 0, rest: 'довільно'},
+                            {name: `${minuteSet}-хв сет`, sets: 1, reps: 'максимум', weight: 0, rest: 'довільно'}
+                        ],
+                        sun: [
+                            {name: 'Бруси', sets: 4, reps: 12 + Math.floor(week / 2), weight: week % 2 === 0 ? brusiWeight : 0, rest: '90-120с'},
+                            {name: week % 2 === 0 ? 'Широкий хват' : 'Вузький хват', sets: 4, reps: 10 + Math.floor(week / 2), weight: 0, rest: '90с'},
+                            {name: 'Планка', sets: 3, reps: `${45 + week * 5}с`, weight: 0, rest: '60с'}
+                        ]
+                    };
+                }
+            }
+        }
+
+        // Render calendar
+        function renderCalendar() {
+            const week = programData.program[currentWeek];
+            document.getElementById('weekTitle').textContent = `Тиждень ${currentWeek}`;
+            document.getElementById('weekPhase').textContent = week.phase;
+            
+            const days = [
+                {key: 'mon', name: 'Понеділок', emoji: '💪', type: 'Сила'},
+                {key: 'wed', name: 'Середа', emoji: '📊', type: "Об'єм"},
+                {key: 'fri', name: "П'ятниця", emoji: '🔥', type: 'Витривалість'},
+                {key: 'sun', name: 'Неділя', emoji: '🎯', type: 'Загальна'}
+            ];
+            
+            const grid = document.getElementById('daysGrid');
+            grid.innerHTML = '';
+            
+            days.forEach(day => {
+                if (!week[day.key]) return;
+                const workoutKey = `w${currentWeek}-${day.key}`;
+                const isCompleted = programData.workouts[workoutKey]?.completed;
+                
+                const card = document.createElement('div');
+                card.className = 'day-card' + (isCompleted ? ' completed' : '');
+                card.onclick = () => openWorkout(currentWeek, day.key, day.name);
+                
+                let exercises = '';
+                week[day.key].slice(0, 2).forEach(ex => {
+                    const weightInfo = ex.weight > 0 ? ` +${ex.weight}кг` : '';
+                    exercises += `<div>• ${ex.name}${weightInfo} ${ex.sets}×${ex.reps}</div>`;
+                });
+                
+                card.innerHTML = `
+                    <div class="emoji">${day.emoji}</div>
+                    <h3>${day.name}</h3>
+                    <p>${day.type}</p>
+                    <div class="exercises">${exercises}</div>
+                    ${isCompleted ? '<div style="color: #4ade80; font-weight: bold; margin-top: 10px;">✓ Виконано</div>' : ''}
+                `;
+                
+                grid.appendChild(card);
+            });
+
+            updateGoalProgress();
+        }
+
+        function updateGoalProgress() {
+            const maxResult = Math.max(...Object.values(programData.workouts).map(w => w.maxResult || 0), programData.userMax);
+            const progress = ((maxResult - programData.userMax) / (programData.targetMax - programData.userMax)) * 100;
+            document.getElementById('goalProgress').style.width = Math.min(100, progress) + '%';
+            document.getElementById('progressText').textContent = 
+                `Початок: ${programData.userMax} | Зараз: ${maxResult} | Мета: ${programData.targetMax} (${Math.round(progress)}%)`;
+        }
+
+        // Change week
+        function changeWeek(direction) {
+            const newWeek = currentWeek + direction;
+            if (newWeek >= 1 && newWeek <= programData.programWeeks) {
+                currentWeek = newWeek;
+                renderCalendar();
+            }
+        }
+
+        // Open workout
+        function openWorkout(week, day, name) {
+            currentWorkout = {week, day, name};
+            const program = programData.program[week][day];
+            const workoutKey = `w${week}-${day}`;
+            
+            if (!programData.workouts[workoutKey]) {
+                programData.workouts[workoutKey] = {
+                    exercises: program.map(() => ({sets: []}))
+                };
+            }
+            
+            document.getElementById('workoutTitle').textContent = name + ` - Тиждень ${week}`;
+            
+            let html = '';
+            program.forEach((ex, exIdx) => {
+                const workout = programData.workouts[workoutKey].exercises[exIdx] || {sets: []};
+                
+                let weightDisplay = '';
+                if (ex.weight > 0) {
+                    weightDisplay = `<div style="background: #fbbf24; color: #78350f; padding: 12px; border-radius: 8px; margin: 10px 0; font-weight: bold; text-align: center; font-size: 18px;">⚖️ ДОДАЙ ВАГУ: +${ex.weight} кг</div>`;
+                } else if (ex.weight === 0 && (ex.name.includes('Підтягування') || ex.name.includes('Бруси'))) {
+                    weightDisplay = `<div style="background: #d1fae5; color: #065f46; padding: 12px; border-radius: 8px; margin: 10px 0; font-weight: bold; text-align: center;">✓ Без ваги</div>`;
+                }
+                
+                const restDisplay = `<div style="background: #e0e7ff; color: #3730a3; padding: 8px; border-radius: 8px; margin: 10px 0; text-align: center;">⏱️ Відпочинок між підходами: <strong>${ex.rest}</strong></div>`;
+                
+                html += `
+                    <div class="exercise-block">
+                        <h3>${ex.name}</h3>
+                        <p style="font-size: 16px; margin: 10px 0;">План: ${ex.sets} підходів × ${ex.reps} повторів</p>
+                        ${weightDisplay}
+                        ${restDisplay}
+                `;
+                
+                for (let i = 0; i < ex.sets; i++) {
+                    html += `
+                        <div class="set-input">
+                            <span style="width: 80px; font-weight: bold;">Підхід ${i + 1}</span>
+                            <input type="number" 
+                                   value="${workout.sets[i] || ''}" 
+                                   onchange="updateSet(${exIdx}, ${i}, this.value)"
+                                   placeholder="${ex.reps}">
+                        </div>
+                    `;
+                }
+                
+                const total = workout.sets.reduce((sum, val) => sum + (parseInt(val) || 0), 0);
+                html += `<div style="margin-top: 10px; font-weight: bold; color: #667eea;">Виконано: ${total}</div></div>`;
+            });
+            
+            document.getElementById('exercisesList').innerHTML = html;
+            document.getElementById('workoutModal').classList.add('active');
+        }
+
+        function updateSet(exIdx, setIdx, value) {
+            const workoutKey = `w${currentWorkout.week}-${currentWorkout.day}`;
+            if (!programData.workouts[workoutKey].exercises[exIdx].sets) {
+                programData.workouts[workoutKey].exercises[exIdx].sets = [];
+            }
+            programData.workouts[workoutKey].exercises[exIdx].sets[setIdx] = parseInt(value) || 0;
+            saveData();
+        }
+
+        function closeWorkout() {
+            document.getElementById('workoutModal').classList.remove('active');
+            currentWorkout = null;
+        }
+
+        function completeWorkout() {
+            const workoutKey = `w${currentWorkout.week}-${currentWorkout.day}`;
+            const total = programData.workouts[workoutKey].exercises.reduce((sum, ex) => 
+                sum + (ex.sets.reduce((s, v) => s + (parseInt(v) || 0), 0)), 0
+            );
+            
+            programData.workouts[workoutKey].completed = true;
+            programData.workouts[workoutKey].maxResult = total;
+            programData.workouts[workoutKey].date = new Date().toISOString();
+            
+            saveData();
+            closeWorkout();
+            renderCalendar();
+            updateStats();
+        }
+
+        // Update stats
+        function updateStats() {
+            const totalPullups = Object.values(programData.workouts).reduce((total, w) => {
+                if (!w.exercises) return total;
+                return total + w.exercises.reduce((sum, ex) => 
+                    sum + (ex.sets?.reduce((s, v) => s + (parseInt(v) || 0), 0) || 0), 0
+                );
+            }, 0);
+            
+            const completedWorkouts = Object.values(programData.workouts).filter(w => w.completed).length;
+            const maxResult = Math.max(...Object.values(programData.workouts).map(w => w.maxResult || 0), programData.userMax);
+            
+            // Calculate streak
+            let streak = 0;
+            const sorted = Object.keys(programData.workouts).sort().reverse();
+            for (let key of sorted) {
+                if (programData.workouts[key].completed) streak++;
+                else break;
+            }
+            
+            document.getElementById('totalPullups').textContent = totalPullups;
+            document.getElementById('completedWorkouts').textContent = completedWorkouts;
+            document.getElementById('currentStreak').textContent = streak;
+            document.getElementById('maxResult').textContent = maxResult;
+        }
+
+        // Update nutrition
+        function updateNutrition() {
+            const dailyProtein = Math.round(programData.bodyWeight * 1.8);
+            const dailyCalories = Math.round(programData.bodyWeight * 35);
+            
+            document.getElementById('dailyProtein').textContent = dailyProtein + 'г';
+            document.getElementById('dailyCalories').textContent = dailyCalories;
+        }
+
+        // Show view
+        function showView(view) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('calendarView').classList.add('hidden');
+            document.getElementById('statsView').classList.add('hidden');
+            document.getElementById('nutritionView').classList.add('hidden');
+            
+            document.getElementById(view + 'View').classList.remove('hidden');
+            
+            if (view === 'stats') updateStats();
+            if (view === 'nutrition') updateNutrition();
+        }
+
+        // Reset app
+        function resetApp() {
+            if (confirm('Почати нову програму? Всі дані буде втрачено.')) {
+                localStorage.removeItem('pullupPro');
+                location.reload();
+            }
+        }
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+</html>
