@@ -1,13 +1,4 @@
-function playBeep() {
-            // Вібрація (працює на iOS 13+)
-            if ('vibrate' in navigator) {
-                navigator.vibrate([200, 100, 200, 100, 200]);
-            }
-            
-            // Альтернатива для iOS - використовуємо HTML5 Audio
-            try {
-                // Створюємо звуковий сигнал через Data URI
-                const beepSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
