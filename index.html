@@ -1,4 +1,13 @@
-<!DOCTYPE html>
+function playBeep() {
+            // Вібрація (працює на iOS 13+)
+            if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200, 100, 200]);
+            }
+            
+            // Альтернатива для iOS - використовуємо HTML5 Audio
+            try {
+                // Створюємо звуковий сигнал через Data URI
+                const beepSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8<!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
@@ -366,12 +375,12 @@
             
             <div id="step1">
                 <h3 style="margin: 20px 0;">Твій поточний максимум</h3>
-                <input type="number" id="userMax" placeholder="Наприклад: 24" value="24">
+                <input type="number" id="userMax" placeholder="Наприклад: 24">
             </div>
             
             <div id="step2" class="hidden">
                 <h3 style="margin: 20px 0;">Твоя мета</h3>
-                <input type="number" id="targetMax" placeholder="Наприклад: 50" value="50">
+                <input type="number" id="targetMax" placeholder="Наприклад: 50">
             </div>
             
             <div id="step3" class="hidden">
@@ -386,7 +395,7 @@
             
             <div id="step4" class="hidden">
                 <h3 style="margin: 20px 0;">Твоя вага (кг)</h3>
-                <input type="number" id="bodyWeight" placeholder="75" value="75">
+                <input type="number" id="bodyWeight" placeholder="75">
                 <h3 style="margin: 20px 0;">Дата початку</h3>
                 <input type="date" id="startDate">
             </div>
@@ -538,21 +547,30 @@
                     </div>
                     
                     <div id="restTimer" class="hidden">
-                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 10px;">Зворотній відлік</div>
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 10px;">Зворотній відлік - Відпочинок</div>
                         <div class="timer-presets">
+                            <button class="preset-btn" onclick="setRestTimer(30)">30 с</button>
+                            <button class="preset-btn" onclick="setRestTimer(45)">45 с</button>
                             <button class="preset-btn" onclick="setRestTimer(60)">1 хв</button>
                             <button class="preset-btn" onclick="setRestTimer(90)">1.5 хв</button>
                             <button class="preset-btn" onclick="setRestTimer(120)">2 хв</button>
                             <button class="preset-btn" onclick="setRestTimer(180)">3 хв</button>
                             <button class="preset-btn" onclick="setRestTimer(240)">4 хв</button>
                             <button class="preset-btn" onclick="setRestTimer(300)">5 хв</button>
-                            <button class="preset-btn" onclick="setRestTimer(45)">45 с</button>
-                            <button class="preset-btn" onclick="setRestTimer(30)">30 с</button>
                         </div>
                     </div>
                     
                     <div id="workoutTimer" class="hidden">
-                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 10px;">Секундомір</div>
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 10px;">Зворотній відлік - Активність</div>
+                        <div class="timer-presets">
+                            <button class="preset-btn" onclick="setRestTimer(240)">4 хв</button>
+                            <button class="preset-btn" onclick="setRestTimer(300)">5 хв</button>
+                            <button class="preset-btn" onclick="setRestTimer(360)">6 хв</button>
+                            <button class="preset-btn" onclick="setRestTimer(420)">7 хв</button>
+                        </div>
+                        <div style="font-size: 12px; opacity: 0.7; margin-top: 10px;">
+                            💡 Для драбинок та часових сетів
+                        </div>
                     </div>
                     
                     <div class="timer-display" id="timerDisplay">00:00</div>
@@ -664,48 +682,99 @@
         }
 
         function playBeep() {
-            // Вібрація
-            if ('vibrate' in navigator) {
-                navigator.vibrate([200, 100, 200]);
+            // Показуємо візуальне сповіщення
+            const display = document.getElementById('timerDisplay');
+            display.style.background = '#fbbf24';
+            display.style.color = '#000';
+            
+            setTimeout(() => {
+                display.style.background = 'transparent';
+                display.style.color = 'white';
+            }, 500);
+            
+            setTimeout(() => {
+                display.style.background = '#fbbf24';
+                display.style.color = '#000';
+            }, 700);
+            
+            setTimeout(() => {
+                display.style.background = 'transparent';
+                display.style.color = 'white';
+            }, 1200);
+            
+            // Показуємо алерт з звуком
+            if (confirm('⏰ ЧАС ВИЙШОВ! Відпочинок завершено!')) {
+                // Користувач натиснув OK
             }
             
-            // Звуковий сигнал
-            try {
-                if (!audioContext) {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            // Спроба вібрації
+            if ('vibrate' in navigator) {
+                navigator.vibrate([500, 200, 500, 200, 500]);
+            }
+        }
+
+        // Таймер який працює у фоні
+        let timerStartTime = null;
+        let timerPausedTime = 0;
+        let timerDirection = 1; // 1 для секундоміра, -1 для зворотного відліку
+
+        function startTimer() {
+            if (isTimerRunning) return;
+            
+            isTimerRunning = true;
+            
+            if (timerMode === 'rest') {
+                if (timerSeconds === 0 && targetSeconds > 0) {
+                    timerSeconds = targetSeconds;
+                }
+                timerDirection = -1;
+            } else {
+                timerDirection = 1;
+            }
+            
+            // Зберігаємо точний час старту
+            timerStartTime = Date.now() - (timerPausedTime * 1000);
+            
+            // Використовуємо requestAnimationFrame для точності
+            function updateTimer() {
+                if (!isTimerRunning) return;
+                
+                const elapsed = Math.floor((Date.now() - timerStartTime) / 1000);
+                
+                if (timerMode === 'rest') {
+                    timerSeconds = targetSeconds - elapsed;
+                    if (timerSeconds <= 0) {
+                        timerSeconds = 0;
+                        pauseTimer();
+                        playBeep();
+                    }
+                } else {
+                    timerSeconds = elapsed;
                 }
                 
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.value = 800;
-                oscillator.type = 'sine';
-                
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.5);
-                
-                // Другий сигнал
-                setTimeout(() => {
-                    const osc2 = audioContext.createOscillator();
-                    const gain2 = audioContext.createGain();
-                    osc2.connect(gain2);
-                    gain2.connect(audioContext.destination);
-                    osc2.frequency.value = 1000;
-                    osc2.type = 'sine';
-                    gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
-                    gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-                    osc2.start(audioContext.currentTime);
-                    osc2.stop(audioContext.currentTime + 0.5);
-                }, 200);
-            } catch (e) {
-                console.log('Audio not supported');
+                updateTimerDisplay();
+                requestAnimationFrame(updateTimer);
             }
+            
+            requestAnimationFrame(updateTimer);
+        }
+
+        function pauseTimer() {
+            isTimerRunning = false;
+            if (timerMode === 'rest') {
+                timerPausedTime = targetSeconds - timerSeconds;
+            } else {
+                timerPausedTime = timerSeconds;
+            }
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timerSeconds = timerMode === 'rest' ? targetSeconds : 0;
+            timerPausedTime = 0;
+            timerStartTime = null;
+            updateTimerDisplay();
+            document.getElementById('timerDisplay').classList.remove('pulse');
         }
 
         // Initialize timer mode on load
@@ -776,20 +845,35 @@
         // Setup wizard
         function nextStep() {
             if (currentStep === 1) {
-                programData.userMax = parseInt(document.getElementById('userMax').value) || 24;
+                const maxInput = parseInt(document.getElementById('userMax').value);
+                if (!maxInput || maxInput < 1) {
+                    alert('Будь ласка, введи свій поточний максимум підтягувань');
+                    return;
+                }
+                programData.userMax = maxInput;
                 document.getElementById('step1').classList.add('hidden');
                 document.getElementById('step2').classList.remove('hidden');
                 document.getElementById('backBtn').style.display = 'block';
                 currentStep = 2;
                 updateProgressBar();
             } else if (currentStep === 2) {
-                programData.targetMax = parseInt(document.getElementById('targetMax').value) || 50;
+                const targetInput = parseInt(document.getElementById('targetMax').value);
+                if (!targetInput || targetInput <= programData.userMax) {
+                    alert('Мета має бути більшою за поточний максимум');
+                    return;
+                }
+                programData.targetMax = targetInput;
                 document.getElementById('step2').classList.add('hidden');
                 document.getElementById('step3').classList.remove('hidden');
                 currentStep = 3;
                 updateProgressBar();
             } else if (currentStep === 4) {
-                programData.bodyWeight = parseInt(document.getElementById('bodyWeight').value) || 75;
+                const weightInput = parseInt(document.getElementById('bodyWeight').value);
+                if (!weightInput || weightInput < 30 || weightInput > 200) {
+                    alert('Будь ласка, введи реальну вагу (30-200 кг)');
+                    return;
+                }
+                programData.bodyWeight = weightInput;
                 programData.startDate = document.getElementById('startDate').value;
                 generateProgram();
                 document.getElementById('setupScreen').classList.add('hidden');
@@ -912,7 +996,7 @@
                         ],
                         fri: [
                             {name: '5-хв сет', sets: 1, reps: 'максимум', weight: 0, rest: 'довільно'},
-                            {name: `Лестниця 1-${Math.min(10, Math.round(programData.userMax * 0.4))}-1`, sets: 1, reps: '100', weight: 0, rest: 'довільно'}
+                            {name: `Драбинка 1-${Math.min(10, Math.round(programData.userMax * 0.4))}-1`, sets: 1, reps: '100', weight: 0, rest: 'довільно'}
                         ],
                         sun: [
                             {name: `🎊 ФІНАЛЬНИЙ ТЕСТ`, sets: 1, reps: programData.targetMax, weight: 0, rest: '-'}
@@ -937,7 +1021,7 @@
                             {name: 'Добивання з гумою', sets: 2, reps: 'до відмови', weight: 0, rest: '2хв'}
                         ],
                         fri: [
-                            {name: `Лестниця 1-${ladderPeak}-1`, sets: 1, reps: `~${ladderPeak * ladderPeak}`, weight: 0, rest: 'довільно'},
+                            {name: `Драбинка 1-${ladderPeak}-1`, sets: 1, reps: `~${ladderPeak * ladderPeak}`, weight: 0, rest: 'довільно'},
                             {name: `${minuteSet}-хв сет`, sets: 1, reps: 'максимум', weight: 0, rest: 'довільно'}
                         ],
                         sun: [
