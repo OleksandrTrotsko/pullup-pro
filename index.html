@@ -285,15 +285,68 @@
             text-align: center;
             font-weight: bold;
         }
-        .close-modal {
-            position: sticky;
-            top: 0;
-            background: white;
-            padding: 15px;
-            margin: -20px -20px 20px -20px;
-            border-radius: 20px 20px 0 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 10;
+        .timer-controls {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .timer-display {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+        .timer-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .timer-btn {
+            padding: 12px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .timer-btn:active {
+            background: rgba(255,255,255,0.4);
+        }
+        .timer-btn.active {
+            background: rgba(255,255,255,0.3);
+        }
+        .timer-presets {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+        .preset-btn {
+            padding: 10px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .preset-btn:active {
+            background: rgba(255,255,255,0.4);
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .timer-display.pulse {
+            animation: pulse 1s infinite;
+            color: #fbbf24;
         }
     </style>
 </head>
@@ -471,17 +524,221 @@
         <!-- Workout Modal -->
         <div id="workoutModal" class="workout-modal">
             <div class="workout-content">
-                <h2 id="workoutTitle" style="margin-bottom: 20px;"></h2>
-                <div id="exercisesList"></div>
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button class="btn btn-primary" onclick="closeWorkout()">Закрити</button>
-                    <button class="btn btn-success" onclick="completeWorkout()" style="flex: 1;">✅ Завершити</button>
+                <div class="close-modal">
+                    <button class="btn btn-primary" onclick="closeWorkout()" style="width: 100%;">← Назад до календаря</button>
                 </div>
+                
+                <!-- Timer Section -->
+                <div class="timer-controls">
+                    <h3 style="margin-bottom: 10px;">⏱️ Таймер</h3>
+                    
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button class="timer-btn" onclick="switchTimerMode('rest')" id="restModeBtn">🛌 Відпочинок</button>
+                        <button class="timer-btn" onclick="switchTimerMode('workout')" id="workoutModeBtn">💪 Активність</button>
+                    </div>
+                    
+                    <div id="restTimer" class="hidden">
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 10px;">Зворотній відлік</div>
+                        <div class="timer-presets">
+                            <button class="preset-btn" onclick="setRestTimer(60)">1 хв</button>
+                            <button class="preset-btn" onclick="setRestTimer(90)">1.5 хв</button>
+                            <button class="preset-btn" onclick="setRestTimer(120)">2 хв</button>
+                            <button class="preset-btn" onclick="setRestTimer(180)">3 хв</button>
+                            <button class="preset-btn" onclick="setRestTimer(240)">4 хв</button>
+                            <button class="preset-btn" onclick="setRestTimer(300)">5 хв</button>
+                            <button class="preset-btn" onclick="setRestTimer(45)">45 с</button>
+                            <button class="preset-btn" onclick="setRestTimer(30)">30 с</button>
+                        </div>
+                    </div>
+                    
+                    <div id="workoutTimer" class="hidden">
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 10px;">Секундомір</div>
+                    </div>
+                    
+                    <div class="timer-display" id="timerDisplay">00:00</div>
+                    
+                    <div class="timer-buttons">
+                        <button class="timer-btn" onclick="startTimer()" id="startBtn">▶️ Старт</button>
+                        <button class="timer-btn" onclick="pauseTimer()" id="pauseBtn">⏸️ Пауза</button>
+                        <button class="timer-btn" onclick="resetTimer()">🔄 Скинути</button>
+                    </div>
+                </div>
+                
+                <h2 id="workoutTitle" style="margin: 20px 0;"></h2>
+                <div id="exercisesList"></div>
+                <button class="btn btn-success" onclick="completeWorkout()" style="margin-top: 20px;">✅ Завершити тренування</button>
             </div>
         </div>
     </div>
 
     <script>
+        // Timer variables
+        let timerInterval = null;
+        let timerSeconds = 0;
+        let timerMode = 'rest'; // 'rest' or 'workout'
+        let isTimerRunning = false;
+        let targetSeconds = 0;
+        let audioContext = null;
+
+        function switchTimerMode(mode) {
+            timerMode = mode;
+            resetTimer();
+            
+            document.getElementById('restModeBtn').classList.remove('active');
+            document.getElementById('workoutModeBtn').classList.remove('active');
+            
+            if (mode === 'rest') {
+                document.getElementById('restModeBtn').classList.add('active');
+                document.getElementById('restTimer').classList.remove('hidden');
+                document.getElementById('workoutTimer').classList.add('hidden');
+            } else {
+                document.getElementById('workoutModeBtn').classList.add('active');
+                document.getElementById('restTimer').classList.add('hidden');
+                document.getElementById('workoutTimer').classList.remove('hidden');
+            }
+        }
+
+        function setRestTimer(seconds) {
+            targetSeconds = seconds;
+            timerSeconds = seconds;
+            updateTimerDisplay();
+        }
+
+        function startTimer() {
+            if (isTimerRunning) return;
+            
+            isTimerRunning = true;
+            
+            if (timerMode === 'rest' && timerSeconds === 0 && targetSeconds > 0) {
+                timerSeconds = targetSeconds;
+            }
+            
+            timerInterval = setInterval(() => {
+                if (timerMode === 'rest') {
+                    // Зворотній відлік
+                    timerSeconds--;
+                    if (timerSeconds <= 0) {
+                        timerSeconds = 0;
+                        pauseTimer();
+                        playBeep();
+                        document.getElementById('timerDisplay').classList.add('pulse');
+                        setTimeout(() => {
+                            document.getElementById('timerDisplay').classList.remove('pulse');
+                        }, 3000);
+                    }
+                } else {
+                    // Секундомір
+                    timerSeconds++;
+                }
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isTimerRunning = false;
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timerSeconds = timerMode === 'rest' ? targetSeconds : 0;
+            updateTimerDisplay();
+            document.getElementById('timerDisplay').classList.remove('pulse');
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(Math.abs(timerSeconds) / 60);
+            const seconds = Math.abs(timerSeconds) % 60;
+            const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('timerDisplay').textContent = display;
+            
+            // Змінюємо колір коли менше 10 секунд
+            if (timerMode === 'rest' && timerSeconds <= 10 && timerSeconds > 0) {
+                document.getElementById('timerDisplay').style.color = '#fbbf24';
+            } else {
+                document.getElementById('timerDisplay').style.color = 'white';
+            }
+        }
+
+        function playBeep() {
+            // Вібрація
+            if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200]);
+            }
+            
+            // Звуковий сигнал
+            try {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+                
+                // Другий сигнал
+                setTimeout(() => {
+                    const osc2 = audioContext.createOscillator();
+                    const gain2 = audioContext.createGain();
+                    osc2.connect(gain2);
+                    gain2.connect(audioContext.destination);
+                    osc2.frequency.value = 1000;
+                    osc2.type = 'sine';
+                    gain2.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    osc2.start(audioContext.currentTime);
+                    osc2.stop(audioContext.currentTime + 0.5);
+                }, 200);
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+
+        // Initialize timer mode on load
+        setTimeout(() => {
+            if (document.getElementById('restModeBtn')) {
+                switchTimerMode('rest');
+            }
+        }, 100);
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZnVuY3Rpb24oZSkge30pOw==').catch(() => {});
+            });
+        }
+
+        // Install prompt for iOS
+        let installPromptShown = localStorage.getItem('installPromptShown');
+        if (!installPromptShown && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+            const isInStandaloneMode = window.navigator.standalone;
+            if (!isInStandaloneMode) {
+                setTimeout(() => {
+                    const container = document.querySelector('.container');
+                    const prompt = document.createElement('div');
+                    prompt.className = 'install-prompt';
+                    prompt.innerHTML = '📱 Додай на головний екран для кращого досвіду!<br><small>Safari → Поділитися → На головний екран</small>';
+                    prompt.onclick = () => {
+                        prompt.remove();
+                        localStorage.setItem('installPromptShown', 'true');
+                    };
+                    container.insertBefore(prompt, container.firstChild);
+                }, 3000);
+            }
+        }
         let currentStep = 1;
         let currentWeek = 1;
         let currentView = 'calendar';
